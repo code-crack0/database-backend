@@ -1,0 +1,22 @@
+const oracledb = require('oracledb');
+oracledb.initOracleClient({ libDir: 'C:\\Users\\samad\\OneDrive\\Documents\\instantclient_21_13' });
+async function runQuery(prompt) {
+    try{
+        const connection = await oracledb.getConnection({
+            user          : "b00092265",
+            password      : "b00092265",  // contains the hr schema password
+            connectString :  "(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=coeoracle.aus.edu)(PORT=1521))(CONNECT_DATA=(SERVER=DEDICATED)(SERVICE_NAME=orcl)))"
+        });
+    
+        const result = await connection.execute(prompt);
+    
+        await connection.close();   // Always close connections
+        return result;
+    }
+    catch(err){
+        console.error(err);
+    }
+}
+
+module.exports = runQuery;
+
