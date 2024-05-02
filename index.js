@@ -1,6 +1,7 @@
-const runQuery = require('./dbConnection.js')
-const express = require('express')
-const bodyParser = require('body-parser')
+import runQuery from "./dbConnection.js";
+import express from 'express'
+import bodyParser from 'body-parser'
+import { nanoid } from 'nanoid'
 const app = express();
 app.use(bodyParser());
 
@@ -23,15 +24,15 @@ app.get('/customer/:id',async (req,res) => {
 // CREATE CUSTOMER  (POST)
 app.post('/customer',async(req,res) => {
     const {name, email, phone} = req.body
-    // const id = nanoid() will be used to generate a unique id
-    const promptResult = await runQuery(`insert into customer (customerid,name, email, phone) values ('${id}','${name}','${email}','${phone}')`)
+    const id = nanoid() ;  // will be used to generate a unique id
+    const promptResult = await runQuery(`insert into customer (customerid,name, email, contact_information) values ('${id}','${name}','${email}','${phone}')`)
     res.json(promptResult)
 }
 );
 // UPDATE CUSTOMER (PATCH)
 app.patch('/customer/:id',async(req,res) => {
     const {name, email, phone} = req.body
-    const promptResult = await runQuery(`update customer set name = '${name}', email = '${email}', phone = '${phone}' where customerid = ${req.params.id}`)
+    const promptResult = await runQuery(`update customer set name = '${name}', email = '${email}', contact_information = '${phone}' where customerid = ${req.params.id}`)
     res.json(promptResult)
 }
 );
@@ -61,7 +62,7 @@ app.get('/menu/:id',async (req,res) => {
 app.patch('/menu/:id',async(req,res) => {
     const {name, price} = req.body
     // const id = nanoid() will be used to generate a unique id
-    const promptResult = await runQuery(`update menu set itemid = '${id}' name = '${name}', description = '${description}' , price = '${price}' , category = '${category}' where itemid = ${req.params.id}`)
+    const promptResult = await runQuery(`update menu set itemid = '${id}' itemname = '${name}', description = '${description}' , price = '${price}' , category = '${category}' where itemid = ${req.params.id}`)
     res.json(promptResult)
 }
 );
@@ -75,7 +76,7 @@ app.delete('/menu/:id',async(req,res) => {
 app.post('/menu',async(req,res) => {
     const {name, description, price, category} = req.body
     // const id = nanoid() will be used to generate a unique id
-    const promptResult = await runQuery(`insert into menu (itemid,name, description, price, category) values ('${id}','${name}','${description}','${price}','${category}')`)
+    const promptResult = await runQuery(`insert into menu (itemid,itemname, description, price, category) values ('${id}','${name}','${description}','${price}','${category}')`)
     res.json(promptResult)
 }
 );
@@ -83,11 +84,24 @@ app.post('/menu',async(req,res) => {
 
 // GET ALL ORDERS
 app.get('/order',async (req,res) => {
-    const promptResult = await runQuery('select * from "Order" ')
+    const promptResult = await runQuery('select * from Orders ')
     res.json(promptResult)
 }
 );
-
+// GET ORDER BY ID
+app.get('/order/:id',async (req,res) => {
+    const promptResult = await runQuery(`select * from Orders where orderid = ${req.params.id}`)
+    res.json(promptResult)
+}
+);
+// UPDATE ORDER (PATCH)
+app.patch('/order/:id',async(req,res) => {
+    const order_id = req.params.id;
+    const {employee_id,customer_id,table_number,order_date,total_price} = req.body
+    const promptResult = await runQuery(`update Orders set orderid = '${order_id}', employeeid = '${employee_id}', customername = '${customer_id}', tablenumber = '${table_number}', orderdate = '${order_date}', totalprice = '${total_price}' where orderid = ${req.params.id}`)
+    res.json(promptResult)
+}
+);
 // app.post('/create-employee', async(req,res) => {
 //     const 
 // })

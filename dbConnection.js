@@ -1,4 +1,4 @@
-const oracledb = require('oracledb');
+import oracledb from 'oracledb';
 oracledb.initOracleClient({ libDir: 'C:\\Users\\samad\\OneDrive\\Documents\\instantclient_21_13' });
 async function runQuery(prompt) {
     try{
@@ -18,5 +18,5 @@ async function runQuery(prompt) {
     }
 }
 
-module.exports = runQuery;
+export default runQuery;
 
