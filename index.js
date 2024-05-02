@@ -5,6 +5,29 @@ import { nanoid } from 'nanoid'
 const app = express();
 app.use(bodyParser());
 
+// EMPLOYEE ROUTES
+app.get('/employee',async (req,res) => {
+    const promptResult = await runQuery('select * from User_Employee')
+    res.json(promptResult)
+}
+);
+app.get('/employee/:id',async (req,res) => {
+    const promptResult = await runQuery(`select * from User_Employee where userid = ${req.params.id}`)
+    res.json(promptResult)
+}
+);
+app.delete('/employee/:id',async(req,res) => {
+    const promptResult = await runQuery(`delete from User_Employee where userid = ${req.params.id}`)
+    res.json(promptResult)
+}
+);
+app.post('/employee',async(req,res) => {
+    const{username,is_admin,name,position,phone,salary,password} = req.body;
+    const employee_id = nanoid();
+    const promptResult = await runQuery(`insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${password}','${is_admin}','${name}','${position}','${phone}','${salary}')`)
+    res.json(promptResult)
+}
+);
 
 // CUSTOMER ROUTES
 
@@ -102,6 +125,7 @@ app.patch('/order/:id',async(req,res) => {
     res.json(promptResult)
 }
 );
+// POST ORDER (POST) CHECK if customer id exists
 // app.post('/create-employee', async(req,res) => {
 //     const 
 // })
