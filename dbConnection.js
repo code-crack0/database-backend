@@ -9,6 +9,7 @@ async function runQuery(prompt) {
         });
     
         const result = await connection.execute(prompt);
+        const commit = await connection.execute(`COMMIT WORK`); 
     
         await connection.close();   // Always close connections
         return result;
