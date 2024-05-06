@@ -9,20 +9,46 @@ app.use(bodyParser());
 app.use(cors())
 // EMPLOYEE ROUTES
 app.get('/employee',async (req,res) => {
-    const promptResult = await runQuery('select * from User_Employee')
-    res.json(promptResult?.rows)
+    // JSON_OBJECT('ID'ISEMPLOYEE_ID,'FIRSTNAME'ISFIRST_NAME,'LASTNAME'ISLAST_NAME)
+    // const promptResult = await runQuery(sql`select JSON_OBJECT('ID' IS userid,'USERNAME' IS username,'IS_ADMIN' IS isadmin,'NAME' IS name,'POSITION' IS position,'PHONE' IS contact_information,'SALARY' IS salary) from User_Employee`)
+    const promptResult = await runQuery(sql`select * from User_Employee`);
+    // convert prompt result to json
+
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows);
 }
 );
 app.get('/employee/:id',async (req,res) => {
     const query= sql`select * from User_Employee where userid = ${req.params.id}`
     const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })  
+    
+    res.json(rows);
 }
 );
 app.delete('/employee/:id',async(req,res) => {
     const query = sql`delete from User_Employee where userid = ${req.params.id}`
     const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows);
 }
 );
 app.post('/employee',async(req,res) => {
@@ -44,7 +70,14 @@ app.post('/employee',async(req,res) => {
 app.get('/customer',async (req,res) => {
     const query = sql`select * from customer`
     const promptResult = await runQuery(query)
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
 }
 );
 
@@ -53,7 +86,14 @@ app.get('/customer',async (req,res) => {
 app.get('/customer/:id',async (req,res) => {
     const query = sql`select * from customer where customerid = ${req.params.id}`
     const promptResult = await runQuery(query)
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
 }
 );
 // CREATE CUSTOMER  (POST)
@@ -75,9 +115,13 @@ app.patch('/customer/:id',async(req,res) => {
 
 // DELETE CUSTOMER (DELETE)
 app.delete('/customer/:id',async(req,res) => {
-    const query = sql`delete from customer where customerid = ${req.params.id}`
-    const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    try{
+        const query = sql`delete from customer where customerid = ${req.params.id}`
+        const promptResult = await runQuery(query);
+        res.json({message: 'Customer deleted successfully'});
+    } catch(err){
+        res.json({message: 'Customer not found/deleted'});
+    }
 }
 );
 
@@ -87,14 +131,29 @@ app.delete('/customer/:id',async(req,res) => {
 app.get('/menu',async (req,res) => {
     const query = sql`select * from menu`
     const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
 }
 );
 // GET MENU ITEM BY ID
 app.get('/menu/:id',async (req,res) => {
     const query = sql`select * from menu where itemid = ${req.params.id}`
     const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
+
 }
 );
 // UPDATE MENU ITEM (PATCH)
