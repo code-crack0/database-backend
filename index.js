@@ -166,9 +166,13 @@ app.patch('/menu/:id',async(req,res) => {
 );
 // DELETE MENU ITEM (DELETE)
 app.delete('/menu/:id',async(req,res) => {
-    const query = sql`delete from menu where itemid = ${req.params.id}`
-    const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    try{
+        const query = sql`delete from menu where itemid = ${req.params.id}`
+        const promptResult = await runQuery(query);
+        res.json({message: 'Menu item deleted successfully'});
+    } catch(err){
+        res.json({message: 'Menu item not found/deleted'});
+    }
 }
 );
 // CREATE MENU ITEM (POST)
@@ -185,14 +189,28 @@ app.post('/menu',async(req,res) => {
 app.get('/order',async (req,res) => {
     const query = sql`select * from Orders`
     const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
 }
 );
 // GET ORDER BY ID
 app.get('/order/:id',async (req,res) => {
     const query = sql`select * from Orders where orderid = ${req.params.id}`
     const promptResult = await runQuery(query);
-    res.json(promptResult?.rows)
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows);
 }
 );
 // UPDATE ORDER (PATCH)
