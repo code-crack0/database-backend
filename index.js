@@ -53,7 +53,7 @@ app.delete('/employee/:id',async(req,res) => {
 );
 app.post('/employee',async(req,res) => {
     try{
-        const{username,is_admin,name,position,phone,salary,password} = req.body;
+        const{username,isadmin,name,position,contact_information,salary,password} = req.body;
         const employee_id = nanoid();
         const promptResult = await runQuery(`insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${password}','${is_admin}','${name}','${position}','${phone}','${salary}')`)
         res.json(promptResult?.rows)
@@ -85,7 +85,7 @@ app.get('/customer',async (req,res) => {
 
 app.get('/customer/:id',async (req,res) => {
     const query = sql`select * from customer where customerid = ${req.params.id}`
-    const promptResult = await runQuery(query)
+    const promptResult = await runQuery(query);
     const col_names = promptResult?.metaData.map((col) => col.name)
     const rows = promptResult?.rows.map((row) => {
         return row.reduce((acc,cur,index) => {
