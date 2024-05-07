@@ -63,6 +63,18 @@ app.post('/employee',async(req,res) => {
     }
 }
 );
+app.patch('/employee/:id',async(req,res) => {
+    try{
+        const {username,isadmin,name,position,contact_information,salary,password} = req.body;
+        const query = sql`update User_Employee set username = ${username}, isadmin = ${isadmin}, name = ${name}, position = ${position}, contact_information = ${contact_information}, salary = ${salary}, password = ${password} where userid = ${req.params.id}`
+        const promptResult = await runQuery(query);
+        res.json({message: 'Employee updated successfully'});
+    } catch(err){
+        res.json({message: 'Employee not found/updated'});
+    }
+    
+}
+);
 
 // CUSTOMER ROUTES
 
