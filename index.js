@@ -7,7 +7,30 @@ import sql from 'sql-template-tag';
 const app = express();
 app.use(bodyParser());
 app.use(cors())
+
+// LOGIN ROUTE
+
+app.get('/login',async (req,res) => {
+    const{username,password} = req.body;
+    const query = sql`select * from User_Employee where username = ${username} and password = ${password}`
+    const promptResult = await runQuery(query);
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    if(rows.length > 0){
+        res.json({message: 'Login successful'})
+    }
+    else{
+        res.json({message: 'Login failed'})
+    }
+}
+);
 // EMPLOYEE ROUTES
+
 app.get('/employee',async (req,res) => {
     // JSON_OBJECT('ID'ISEMPLOYEE_ID,'FIRSTNAME'ISFIRST_NAME,'LASTNAME'ISLAST_NAME)
     // const promptResult = await runQuery(sql`select JSON_OBJECT('ID' IS userid,'USERNAME' IS username,'IS_ADMIN' IS isadmin,'NAME' IS name,'POSITION' IS position,'PHONE' IS contact_information,'SALARY' IS salary) from User_Employee`)
