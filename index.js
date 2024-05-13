@@ -276,6 +276,64 @@ app.post('/order',async(req,res) => {
 );
 
 // AGGREGATE QUERIES
+
+app.get('/mostboughtitems',async(req,res) => {
+    const query = sql`SELECT m.itemname, o.menu_itemid, COUNT(*) as occurrence_count
+    FROM order_composition o, menu m
+    where m.itemid = o.menu_itemid
+    GROUP BY menu_itemid, m.itemname
+    ORDER BY occurrence_count DESC
+    FETCH First 3 rows only
+    `
+    const promptResult = await runQuery(query);
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
+}
+);
+app.get('/mostfrequentcustomers',async(req,res) => {
+    const query = sql`SELECT c.name, o.customer_customerid, COUNT(*) as occurrence_count
+    FROM orders o, customer c
+    where c.customerid = o.customer_customerid
+    GROUP BY customer_customerid, c.name
+    ORDER BY occurrence_count DESC
+    FETCH First 3 rows only
+    `
+    const promptResult = await runQuery(query);
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
+}
+);
+app.get('/employeewithmostorders',async(req,res) => {
+    const query = sql`SELECT e.name, o.employeeid, COUNT(*) as occurrence_count
+    FROM orders o, user_employee e
+    where e.userid = o.employeeid
+    GROUP BY employeeid, e.name
+    ORDER BY occurrence_count DESC
+    FETCH First 1 rows only
+    `
+    const promptResult = await runQuery(query);
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
+}
+);
 app.listen(5000,function (){
     console.log('listening on prt 5000')
 })
