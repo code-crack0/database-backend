@@ -259,9 +259,21 @@ app.patch('/order/:id',async(req,res) => {
 );
 // POST ORDER (POST) CHECK if customer id exists
 
-// app.post('/create-employee', async(req,res) => {
-//     const 
-// })
+app.post('/order',async(req,res) => {
+    const {employeeid,customerid,tablenumber,orderdate,totalprice,menu_itemids} = req.body;
+    const basicquery = sql`select name from customer where customerid = ${customerid}`
+    const result = await runQuery(basicquery);
+    const customer_name = result?.rows[0][1];
+    const id = nanoid();
+    const query = sql`insert into Orders (orderid,employeeid,customername,tablenumber,orderdate,totalprice,customer_customerid) values (${id},${employeeid},${customer_name},${tablenumber},${orderdate},${totalprice},${customerid})`
+    const promptResult = await runQuery(query);
+    await Promise.all (menu_itemids.map((item) => {
+        const query2 = sql`insert into Order_Composition (order_orderid,menu_itemid) values (${id},${item})`
+         return runQuery(query2);
+    }))
+    res.json(promptResult?.rows)
+}
+);
 app.listen(5000,function (){
     console.log('listening on prt 5000')
 })
