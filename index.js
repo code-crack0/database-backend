@@ -8,6 +8,25 @@ const app = express();
 app.use(bodyParser());
 app.use(cors())
 
+// LOGS GET ROUTE
+app.get('/logs',async (req,res) => {
+    const query = sql`SELECT log_id, action, log_timestamp FROM Employee_Logs
+    UNION ALL
+    SELECT log_id, action, log_timestamp FROM Order_Logs
+    UNION ALL
+    SELECT log_id, action, log_timestamp FROM Menu_Logs
+    ORDER BY log_timestamp DESC `
+    const promptResult = await runQuery(query);
+    const col_names = promptResult?.metaData.map((col) => col.name)
+    const rows = promptResult?.rows.map((row) => {
+        return row.reduce((acc,cur,index) => {
+            acc[col_names[index]] = cur;
+            return acc;
+        },{})
+    })
+    res.json(rows)
+}
+);
 // LOGIN ROUTE
 
 app.get('/login',async (req,res) => {
@@ -78,7 +97,7 @@ app.post('/employee',async(req,res) => {
     try{
         const{username,isadmin,name,position,contact_information,salary,password} = req.body;
         const employee_id = nanoid();
-        const promptResult = await runQuery(`insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${password}','${is_admin}','${name}','${position}','${phone}','${salary}')`)
+        const promptResult = await runQuery(`insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${password}','${isadmin}','${name}','${position}','${contact_information}','${salary}')`)
         res.json(promptResult?.rows)
     }
     catch(err){
