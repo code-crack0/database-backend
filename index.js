@@ -274,6 +274,8 @@ app.post('/order',async(req,res) => {
     res.json(promptResult?.rows)
 }
 );
+
+// AGGREGATE QUERIES
 app.listen(5000,function (){
     console.log('listening on prt 5000')
 })
