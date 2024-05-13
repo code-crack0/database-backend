@@ -270,8 +270,10 @@ app.get('/order/:id',async (req,res) => {
 // UPDATE ORDER (PATCH)
 app.patch('/order/:id',async(req,res) => {
     const order_id = req.params.id;
-    const {employee_id,customer_id,table_number,order_date,total_price} = req.body;
-    const query = sql`update Orders set orderid = ${order_id}, employeeid = ${employee_id}, customername = ${customer_id}, tablenumber = ${table_number}, orderdate = ${order_date}, totalprice = ${total_price} where orderid = ${req.params.id}`;
+    const {employee_id,customer_id,table_number,orderdate,total_price} = req.body;
+    const date = order_date.split('T')[0];
+    console.log(date);
+    const query = sql`update Orders set orderid = ${order_id}, employeeid = ${employee_id}, customername = ${customer_id}, tablenumber = ${table_number}, orderdate = ${date}, totalprice = ${total_price} where orderid = ${req.params.id}`;
     const promptResult = await runQuery(query);
     res.json(promptResult?.rows)
 }
@@ -279,18 +281,30 @@ app.patch('/order/:id',async(req,res) => {
 // POST ORDER (POST) CHECK if customer id exists
 
 app.post('/order',async(req,res) => {
-    const {employeeid,customerid,tablenumber,orderdate,totalprice,menu_itemids} = req.body;
+    try{
+        const {employeeid,customerid,tablenumber,orderdate,totalprice,menu_itemids} = req.body;
     const basicquery = sql`select name from customer where customerid = ${customerid}`
     const result = await runQuery(basicquery);
-    const customer_name = result?.rows[0][1];
+    const customer_name = result?.rows[0][0];
+    console.log(customer_name);
     const id = nanoid();
-    const query = sql`insert into Orders (orderid,employeeid,customername,tablenumber,orderdate,totalprice,customer_customerid) values (${id},${employeeid},${customer_name},${tablenumber},${orderdate},${totalprice},${customerid})`
+    const orderDateObj = new Date(orderdate);
+    const formattedOrderDate = orderDateObj.toISOString().slice(0, 10); // Get date part in YYYY-MM-DD format
+
+    console.log(formattedOrderDate);
+    console.log(employeeid,customerid,tablenumber,orderdate,totalprice,menu_itemids);
+    const query = sql`insert into Orders (orderid,employeeid,customername,tablenumber,orderdate,totalprice,customer_customerid) values (${id},${employeeid},${customer_name},${tablenumber},TO_DATE(${formattedOrderDate},'YYYY-MM-DD'),${totalprice},${customerid})`
     const promptResult = await runQuery(query);
-    await Promise.all (menu_itemids.map((item) => {
+    await Promise.all ( menu_itemids && menu_itemids.map((item) => {
         const query2 = sql`insert into Order_Composition (order_orderid,menu_itemid) values (${id},${item})`
          return runQuery(query2);
     }))
     res.json(promptResult?.rows)
+    }
+    catch(err){
+        res.status(400).send(err);
+        console.log(err);
+    }
 }
 );
 
