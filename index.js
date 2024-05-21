@@ -4,6 +4,7 @@ import bodyParser from 'body-parser'
 import { nanoid } from 'nanoid'
 import cors from 'cors'
 import sql from 'sql-template-tag'
+import bcrypt from 'bcryptjs'
 const app = express()
 app.use(bodyParser())
 app.use(cors())
@@ -37,7 +38,7 @@ app.get('/logs', async (req, res) => {
 
 app.get('/login', async (req, res) => {
   const { username, password } = req.body
-  const query = sql`select * from User_Employee where username = ${username} and password = ${password}`
+  const query = sql`select * from User_Employee where username = ${username}`
   const promptResult = await runQuery(query)
   const col_names = promptResult?.metaData.map((col) => col.name)
   const rows = promptResult?.rows.map((row) => {
@@ -46,7 +47,9 @@ app.get('/login', async (req, res) => {
       return acc
     }, {})
   })
-  if (rows.length > 0) {
+  const user = rows[0]
+  const isPasswordMatch = await bcrypt.compare(password, user.PASSWORD)
+  if (isPasswordMatch) {
     res.json({ message: 'Login successful' })
   } else {
     res.json({ message: 'Login failed' })
@@ -105,9 +108,10 @@ app.post('/employee', async (req, res) => {
       salary,
       password,
     } = req.body
+    const encryptedPassword = await bcrypt.hash(password, 10);
     const employee_id = nanoid()
     const promptResult = await runQuery(
-      `insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${password}','${isadmin}','${name}','${position}','${contact_information}','${salary}')`
+      `insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${encryptedPassword}','${isadmin}','${name}','${position}','${contact_information}','${salary}')`
     )
     res.json(promptResult?.rows)
   } catch (err) {
@@ -329,6 +333,18 @@ app.post('/order', async (req, res) => {
     console.log(err)
   }
 })
+
+app.delete('/order/:id', async (req, res) => {
+  try {
+    const query = sql`delete from Orders where orderid = ${req.params.id}`
+    const promptResult = await runQuery(query)
+    res.json({ message: 'Order deleted successfully' })
+  } catch (err) {
+    res.json({ message: 'Order not found/deleted' })
+  }
+}
+)
+
 
 // AGGREGATE QUERIES
 
