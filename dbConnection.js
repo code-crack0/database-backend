@@ -1,8 +1,8 @@
 import oracledb from 'oracledb'
 oracledb.initOracleClient({
-  libDir:
-    'D:\\instantclient-basic-windows.x64-21.13.0.0.0dbru\\instantclient_21_13',
-  // libDir: 'C:\\Users\\samad\\OneDrive\\Documents\\instantclient_21_13',
+  // libDir:
+  //   'D:\\instantclient-basic-windows.x64-21.13.0.0.0dbru\\instantclient_21_13',
+  libDir: 'C:\\Users\\samad\\OneDrive\\Documents\\instantclient_21_13',
 })
 async function runQuery(prompt) {
   try {
