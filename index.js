@@ -106,9 +106,12 @@ app.get('/employee/:id', async (req, res) => {
 app.delete('/employee/:id', async (req, res) => {
   console.log(req.params.id)
   console.log(
-    `delete from Order where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}"`
+    `delete from Order where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}`
   )
   console.log(`delete from User_Employee where userid = ${req.params.id}`)
+  console.log(
+    `update menu_management set USER_EMPLOYEE_USERID=NULL where user_employoee_userid=${req.params.id}`
+  )
   try {
     const query1 = sql`delete from Orders where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}"`
     const promptResult1 = await runQuery(query1)
@@ -119,9 +122,9 @@ app.delete('/employee/:id', async (req, res) => {
     const query = sql`delete from User_Employee where userid = ${req.params.id}`
     const promptResult = await runQuery(query)
 
-    res.json({ message: 'Customer deleted successfully' })
+    res.json({ message: 'Employee deleted successfully' })
   } catch (err) {
-    res.json({ message: 'Customer not found/deleted' })
+    res.json({ message: 'Employee not found/deleted' })
   }
 })
 app.post('/employee', async (req, res) => {
@@ -217,6 +220,9 @@ app.put('/customer/:id', async (req, res) => {
 // DELETE CUSTOMER (DELETE)
 app.delete('/customer/:id', async (req, res) => {
   try {
+    await runQuery(
+      sql`update order set customerid=NULL where customerid=${req.params.id}`
+    )
     const query = sql`delete from customer where customerid = ${req.params.id}`
     const promptResult = await runQuery(query)
     res.json({ message: 'Customer deleted successfully' })
