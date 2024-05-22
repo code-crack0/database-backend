@@ -256,27 +256,33 @@ app.post('/menu', async (req, res) => {
 app.get('/order', async (req, res) => {
   const query = sql`select * from Orders`
   const promptResult = await runQuery(query)
-  const col_names = promptResult?.metaData.map((col) => col.name)
+  const col_names = promptResult?.metaData.map((col) => col.name);
   const rows = promptResult?.rows.map((row) => {
     return row.reduce((acc, cur, index) => {
       acc[col_names[index]] = cur
       return acc
     }, {})
-  })
-  res.json(rows)
+  });
+  res.json(rows);
+  
 })
 // GET ORDER BY ID
 app.get('/order/:id', async (req, res) => {
   const query = sql`select * from Orders where orderid = ${req.params.id}`
   const promptResult = await runQuery(query)
   const col_names = promptResult?.metaData.map((col) => col.name)
-  const rows = promptResult?.rows.map((row) => {
+  // get the menu items for the order
+  const query2 = sql`select menu_itemid from Order_Composition where order_orderid = ${req.params.id}`
+  const promptResult2 = await runQuery(query2)
+  const menu_itemids = promptResult2?.rows.map((row) => row[0])
+  const order = promptResult?.rows.map((row) => {
     return row.reduce((acc, cur, index) => {
       acc[col_names[index]] = cur
       return acc
     }, {})
-  })
-  res.json(rows)
+  })[0]
+  order.menu_itemids = menu_itemids
+  res.json(order);
 })
 // UPDATE ORDER (PATCH)
 app.patch('/order/:id', async (req, res) => {
