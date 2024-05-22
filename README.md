@@ -18,7 +18,7 @@ Find the link to the front end here: https://github.com/TaufiqSyed/restaurant-ap
 - Restricted pages to only admins (Employees, Logs)
 - Encrypted passwords (done on backend)
   ***
-  **List of group members:**
+**List of group members:**
 - Taufiq Syed
 - Samad Sayed
 - Dheeman Gangopadhyay
