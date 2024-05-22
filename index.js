@@ -331,6 +331,7 @@ app.get('/order/:id', async (req, res) => {
     const [itemid, itemname, description, price, category] = row
     return { itemid, itemname, description, price, category }
   })
+  console.log
   const order = promptResult?.rows.map((row) => {
     return row.reduce((acc, cur, index) => {
       acc[col_names[index]] = cur
@@ -364,6 +365,13 @@ app.put('/order/:id', async (req, res) => {
         return runQuery(query2)
       })
   )
+  // const query3 = sql`select itemid,itemname, description, price, category from Order_Composition inner join menu on itemid=menu_itemid and order_orderid=${req.params.id}`
+  // // const query2 = sql`select * from Order_Composition`
+  // const promptResult3 = await runQuery(query3)
+  // const menu_items = promptResult3?.rows.map((row) => {
+  //   const [itemid, itemname, description, price, category] = row
+  //   return { itemid, itemname, description, price, category }
+  // })
   const query = sql`update Orders set employeeid = ${employeeid}, CUSTOMER_CUSTOMERID = ${customerid}, tablenumber = ${tablenumber}, orderdate = TO_DATE(${formattedOrderDate},'YYYY-MM-DD'), totalprice = ${totalprice} where orderid = ${req.params.id}`
   const promptResult = await runQuery(query)
   res.json(promptResult?.rows)
