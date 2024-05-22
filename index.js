@@ -114,7 +114,7 @@ app.delete('/employee/:id', async (req, res) => {
     const promptResult1 = await runQuery(query1)
     const query2 = sql`update User_Employee set user_employee_userid=NULL where USER_EMPLOYEE_USERID=${req.params.id}"`
     const promptResult2 = await runQuery(query2)
-    const query3 = sql`delete from menu_management where USER_EMPLOYEE_USERID=${req.params.id}"`
+    const query3 = sql`update menu_management set USER_EMPLOYEE_USERID=NULL where user_employoee_userid=${req.params.id}"`
     const promptResult3 = await runQuery(query3)
     const query = sql`delete from User_Employee where userid = ${req.params.id}`
     const promptResult = await runQuery(query)
@@ -256,8 +256,8 @@ app.get('/menu/:id', async (req, res) => {
 })
 // UPDATE MENU ITEM (put)
 app.put('/menu/:id', async (req, res) => {
-  const { name, price, description, category } = req.body
-  const query = sql`update menu set itemname = ${name}, price = ${price} , description = ${description}, category = ${category} where itemid = ${req.params.id}`
+  const { itemname, price, description, category } = req.body
+  const query = sql`update menu set itemname = ${itemname}, price = ${price} , description = ${description}, category = ${category} where itemid = ${req.params.id}`
   const promptResult = await runQuery(query)
   res.json(promptResult?.rows)
 })
@@ -268,15 +268,16 @@ app.delete('/menu/:id', async (req, res) => {
     const promptResult = await runQuery(query)
     res.json({ message: 'Menu item deleted successfully' })
   } catch (err) {
+    console.error(err)
     res.json({ message: 'Menu item not found/deleted' })
   }
 })
 // CREATE MENU ITEM (POST)
 app.post('/menu', async (req, res) => {
-  const { name, description, price, category } = req.body
+  const { itemname, description, price, category } = req.body
   const id = nanoid() // will be used to generate a unique id
   const promptResult = await runQuery(
-    `insert into menu (itemid,itemname, description, price, category) values ('${id}','${name}','${description}','${price}','${category}')`
+    `insert into menu (itemid,itemname, description, price, category) values ('${id}','${itemname}','${description}','${price}','${category}')`
   )
   res.json(promptResult?.rows)
 })
