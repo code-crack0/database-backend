@@ -104,16 +104,25 @@ app.get('/employee/:id', async (req, res) => {
   res.json(rows)
 })
 app.delete('/employee/:id', async (req, res) => {
-  const query = sql`delete from User_Employee where userid = ${req.params.id}`
-  const promptResult = await runQuery(query)
-  const col_names = promptResult?.metaData.map((col) => col.name)
-  const rows = promptResult?.rows.map((row) => {
-    return row.reduce((acc, cur, index) => {
-      acc[col_names[index]] = cur
-      return acc
-    }, {})
-  })
-  res.json(rows)
+  console.log(req.params.id)
+  console.log(
+    `delete from Order where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}"`
+  )
+  console.log(`delete from User_Employee where userid = ${req.params.id}`)
+  try {
+    const query1 = sql`delete from Orders where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}"`
+    const promptResult1 = await runQuery(query1)
+    const query2 = sql`update User_Employee set user_employee_userid=NULL where USER_EMPLOYEE_USERID=${req.params.id}"`
+    const promptResult2 = await runQuery(query2)
+    const query3 = sql`delete from menu_management where USER_EMPLOYEE_USERID=${req.params.id}"`
+    const promptResult3 = await runQuery(query3)
+    const query = sql`delete from User_Employee where userid = ${req.params.id}`
+    const promptResult = await runQuery(query)
+
+    res.json({ message: 'Customer deleted successfully' })
+  } catch (err) {
+    res.json({ message: 'Customer not found/deleted' })
+  }
 })
 app.post('/employee', async (req, res) => {
   try {
@@ -136,7 +145,9 @@ app.post('/employee', async (req, res) => {
     res.status(400).send(err)
   }
 })
-app.patch('/employee/:id', async (req, res) => {
+app.put('/employee/:id', async (req, res) => {
+  console.log(JSON.stringify(req.body))
+
   try {
     const {
       username,
@@ -194,10 +205,11 @@ app.post('/customer', async (req, res) => {
   )
   res.json(promptResult?.rows)
 })
-// UPDATE CUSTOMER (PATCH)
-app.patch('/customer/:id', async (req, res) => {
-  const { name, email, phone } = req.body
-  const query = sql`update customer set name = ${name}, email = ${email}, contact_information = ${phone} where customerid = ${req.params.id}`
+// UPDATE CUSTOMER (put)
+app.put('/customer/:id', async (req, res) => {
+  console.log('started lol')
+  const { name, email, contact_information } = req.body
+  const query = sql`update customer set name = ${name}, email = ${email}, contact_information = ${contact_information} where customerid = ${req.params.id}`
   const promptResult = await runQuery(query)
   res.json(promptResult?.rows)
 })
@@ -242,8 +254,8 @@ app.get('/menu/:id', async (req, res) => {
   })
   res.json(rows)
 })
-// UPDATE MENU ITEM (PATCH)
-app.patch('/menu/:id', async (req, res) => {
+// UPDATE MENU ITEM (put)
+app.put('/menu/:id', async (req, res) => {
   const { name, price, description, category } = req.body
   const query = sql`update menu set itemname = ${name}, price = ${price} , description = ${description}, category = ${category} where itemid = ${req.params.id}`
   const promptResult = await runQuery(query)
@@ -274,15 +286,15 @@ app.post('/menu', async (req, res) => {
 app.get('/order', async (req, res) => {
   const query = sql`select * from Orders`
   const promptResult = await runQuery(query)
-  const col_names = promptResult?.metaData.map((col) => col.name);
-  const rows = promptResult?.rows.map((row) => {
-    return row.reduce((acc, cur, index) => {
-      acc[col_names[index]] = cur
-      return acc
-    }, {})
-  });
-  res.json(rows);
-  
+  const col_names = promptResult?.metaData.map((col) => col.name)
+  const rows =
+    promptResult?.rows.map((row) => {
+      return row.reduce((acc, cur, index) => {
+        acc[col_names[index]] = cur
+        return acc
+      }, {})
+    }) ?? []
+  res.json(rows)
 })
 // GET ORDER BY ID
 app.get('/order/:id', async (req, res) => {
@@ -290,31 +302,53 @@ app.get('/order/:id', async (req, res) => {
   const promptResult = await runQuery(query)
   const col_names = promptResult?.metaData.map((col) => col.name)
   // get the menu items for the order
-  const query2 = sql`select menu_itemid from Order_Composition where order_orderid = ${req.params.id}`
+  // const query2 = sql`select * from orders inner join order_composition `
+  const query2 = sql`select itemid,itemname, description, price, category from Order_Composition inner join menu on itemid=menu_itemid and order_orderid=${req.params.id}`
+  // const query2 = sql`select * from Order_Composition`
   const promptResult2 = await runQuery(query2)
-  const menu_itemids = promptResult2?.rows.map((row) => row[0])
+  const menu_items = promptResult2?.rows.map((row) => {
+    const [itemid, itemname, description, price, category] = row
+    return { itemid, itemname, description, price, category }
+  })
   const order = promptResult?.rows.map((row) => {
     return row.reduce((acc, cur, index) => {
       acc[col_names[index]] = cur
       return acc
     }, {})
   })[0]
-  order.menu_itemids = menu_itemids
-  res.json(order);
+  order.menu_items = menu_items
+  res.json(order)
 })
-// UPDATE ORDER (PATCH)
-app.patch('/order/:id', async (req, res) => {
-  const order_id = req.params.id
-  const { employee_id, customer_id, table_number, orderdate, total_price } =
-    req.body
-  const date = order_date.split('T')[0]
-  console.log(date)
-  const query = sql`update Orders set orderid = ${order_id}, employeeid = ${employee_id}, customername = ${customer_id}, tablenumber = ${table_number}, orderdate = ${date}, totalprice = ${total_price} where orderid = ${req.params.id}`
+// UPDATE ORDER (put)
+app.put('/order/:id', async (req, res) => {
+  console.log(JSON.stringify(req.body) + ' : ' + req.params.id)
+  const {
+    employeeid,
+    customerid,
+    tablenumber,
+    orderdate,
+    totalprice,
+    menu_itemids,
+  } = req.body
+  const id = req.params.id
+  const orderDateObj = new Date(orderdate)
+  const formattedOrderDate = orderDateObj.toISOString().slice(0, 10) // Get date part in YYYY-MM-DD format
+
+  const query1 = sql`delete from Order_Composition where order_orderid = ${req.params.id}`
+  await runQuery(query1)
+  await Promise.all(
+    menu_itemids &&
+      menu_itemids.map((item) => {
+        const query2 = sql`insert into Order_Composition (order_orderid,menu_itemid) values (${id},${item})`
+        return runQuery(query2)
+      })
+  )
+  const query = sql`update Orders set employeeid = ${employeeid}, CUSTOMER_CUSTOMERID = ${customerid}, tablenumber = ${tablenumber}, orderdate = TO_DATE(${formattedOrderDate},'YYYY-MM-DD'), totalprice = ${totalprice} where orderid = ${req.params.id}`
   const promptResult = await runQuery(query)
   res.json(promptResult?.rows)
 })
-// POST ORDER (POST) CHECK if customer id exists
 
+// POST ORDER (POST) CHECK if customer id exists
 app.post('/order', async (req, res) => {
   try {
     const {
@@ -361,10 +395,15 @@ app.post('/order', async (req, res) => {
 
 app.delete('/order/:id', async (req, res) => {
   try {
+    const query1 = sql`delete from Order_Composition where order_orderid = ${req.params.id}`
+    const promptResult1 = await runQuery(query1)
     const query = sql`delete from Orders where orderid = ${req.params.id}`
     const promptResult = await runQuery(query)
+    console.log('deleted')
     res.json({ message: 'Order deleted successfully' })
   } catch (err) {
+    console.error(err)
+    console.log('not deleted')
     res.json({ message: 'Order not found/deleted' })
   }
 })
