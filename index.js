@@ -104,29 +104,43 @@ app.get('/employee/:id', async (req, res) => {
   res.json(rows)
 })
 app.delete('/employee/:id', async (req, res) => {
-  console.log(req.params.id)
-  console.log(
-    `delete from Order where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}`
-  )
-  console.log(`delete from User_Employee where userid = ${req.params.id}`)
-  console.log(
-    `update menu_management set USER_EMPLOYEE_USERID=NULL where user_employoee_userid=${req.params.id}`
-  )
-  try {
-    const query1 = sql`delete from Orders where EMPLOYEEID = ${req.params.id} or USER_EMPLOYEE_USERID = ${req.params.id}"`
-    const promptResult1 = await runQuery(query1)
-    const query2 = sql`update User_Employee set user_employee_userid=NULL where USER_EMPLOYEE_USERID=${req.params.id}"`
-    const promptResult2 = await runQuery(query2)
-    const query3 = sql`update menu_management set USER_EMPLOYEE_USERID=NULL where user_employoee_userid=${req.params.id}"`
-    const promptResult3 = await runQuery(query3)
-    const query = sql`delete from User_Employee where userid = ${req.params.id}`
-    const promptResult = await runQuery(query)
+  const employeeId = req.params.id
+  console.log(`Attempting to delete employee with ID: ${employeeId}`)
 
+  try {
+    // Begin a transaction
+    await runQuery(sql`BEGIN`)
+
+    // Delete records in dependent tables first to avoid foreign key constraints
+    const deleteMenuManagementQuery = sql`DELETE FROM menu_management WHERE USER_EMPLOYEE_USERID = ${employeeId}`
+    await runQuery(deleteMenuManagementQuery)
+    console.log(`Executed query: ${deleteMenuManagementQuery}`)
+
+    const deleteOrdersQuery = sql`DELETE FROM Orders WHERE EMPLOYEEID = ${employeeId} OR USER_EMPLOYEE_USERID = ${employeeId}`
+    await runQuery(deleteOrdersQuery)
+    console.log(`Executed query: ${deleteOrdersQuery}`)
+
+    // Finally, delete the employee record
+    const mgrUserEmployeeQuery = sql`update User_Employee set user_employee_userid = NULL WHERE userid = ${employeeId}`
+    await runQuery(mgrUserEmployeeQuery)
+    console.log(`Executed query: ${mgrUserEmployeeQuery}`)
+
+    // Finally, delete the employee record
+    const deleteUserEmployeeQuery = sql`DELETE FROM User_Employee WHERE userid = ${employeeId}`
+    await runQuery(deleteUserEmployeeQuery)
+    console.log(`Executed query: ${deleteUserEmployeeQuery}`)
+
+    // Commit the transaction
+    await runQuery(sql`COMMIT`)
     res.json({ message: 'Employee deleted successfully' })
   } catch (err) {
-    res.json({ message: 'Employee not found/deleted' })
+    // Rollback the transaction in case of error
+    await runQuery(sql`ROLLBACK`)
+    console.error(err)
+    res.status(500).json({ message: 'Error deleting employee', error: err })
   }
 })
+
 app.post('/employee', async (req, res) => {
   try {
     const {
