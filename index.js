@@ -36,8 +36,9 @@ app.get('/logs', async (req, res) => {
 })
 // LOGIN ROUTE
 
-app.get('/login', async (req, res) => {
+app.post('/login', async (req, res) => {
   const { username, password } = req.body
+  console.log('hello')
   const query = sql`select * from User_Employee where username = ${username}`
   const promptResult = await runQuery(query)
   const col_names = promptResult?.metaData.map((col) => col.name)
@@ -49,10 +50,11 @@ app.get('/login', async (req, res) => {
   })
   const user = rows[0]
   const isPasswordMatch = await bcrypt.compare(password, user.PASSWORD)
+  console.log(JSON.stringify(isPasswordMatch))
   if (isPasswordMatch) {
-    res.json({ message: 'Login successful' })
+    res.json({ success: true, message: 'Login successful' })
   } else {
-    res.json({ message: 'Login failed' })
+    res.json({ success: false, message: 'Login failed' })
   }
 })
 // EMPLOYEE ROUTES
@@ -108,7 +110,7 @@ app.post('/employee', async (req, res) => {
       salary,
       password,
     } = req.body
-    const encryptedPassword = await bcrypt.hash(password, 10);
+    const encryptedPassword = await bcrypt.hash(password, 10)
     const employee_id = nanoid()
     const promptResult = await runQuery(
       `insert into User_Employee (userid,username,password,isadmin,name,position,contact_information,salary) values ('${employee_id}','${username}','${encryptedPassword}','${isadmin}','${name}','${position}','${contact_information}','${salary}')`
@@ -348,9 +350,7 @@ app.delete('/order/:id', async (req, res) => {
   } catch (err) {
     res.json({ message: 'Order not found/deleted' })
   }
-}
-)
-
+})
 
 // AGGREGATE QUERIES
 
