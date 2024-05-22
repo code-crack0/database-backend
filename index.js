@@ -11,11 +11,11 @@ app.use(cors())
 
 // LOGS GET ROUTE
 app.get('/logs', async (req, res) => {
-  const e_query = sql`SELECT log_id, action, log_timestamp FROM Employee_Logs
+  const e_query = sql`SELECT * FROM Employee_Logs
     ORDER BY log_timestamp DESC `
-  const o_query = sql`SELECT log_id, action, log_timestamp FROM Order_Logs
+  const o_query = sql`SELECT * FROM Order_Logs
     ORDER BY log_timestamp DESC `
-  const m_query = sql`SELECT log_id, action, log_timestamp FROM Menu_Logs
+  const m_query = sql`SELECT * FROM Menu_Logs
     ORDER BY log_timestamp DESC `
 
   const qs = [e_query, o_query, m_query]
@@ -48,11 +48,27 @@ app.post('/login', async (req, res) => {
       return acc
     }, {})
   })
+  if (rows == null || rows.length == 0) {
+    res.json({ success: false, message: 'Login failed' })
+    return
+  }
   const user = rows[0]
   const isPasswordMatch = await bcrypt.compare(password, user.PASSWORD)
   console.log(JSON.stringify(isPasswordMatch))
+  console.log(JSON.stringify(user))
+  console.log({
+    success: true,
+    message: 'Login successful',
+    isadmin: user['ISADMIN'] == 'T',
+    userid: user['USERID'],
+  })
   if (isPasswordMatch) {
-    res.json({ success: true, message: 'Login successful' })
+    res.json({
+      success: true,
+      message: 'Login successful',
+      isadmin: user['ISADMIN'] == 'T',
+      userid: user['USERID'],
+    })
   } else {
     res.json({ success: false, message: 'Login failed' })
   }
@@ -303,6 +319,7 @@ app.post('/order', async (req, res) => {
       totalprice,
       menu_itemids,
     } = req.body
+    console.log(JSON.stringify(req.body))
     const basicquery = sql`select name from customer where customerid = ${customerid}`
     const result = await runQuery(basicquery)
     const customer_name = result?.rows[0][0]
